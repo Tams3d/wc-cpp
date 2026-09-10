@@ -1,4 +1,4 @@
-src = main.cpp args.cpp
+src = main.cpp args.cpp file.cpp
 
 out = wc_cpp
 

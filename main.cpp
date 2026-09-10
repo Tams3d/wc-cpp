@@ -1,10 +1,12 @@
 #include <iostream>
 
 #include "wc.hpp"
+
 int main(int argc, char** argv) {
     bool is_parsing_valid = false;
     if (argc > 1) {
         Options flags;
+
         is_parsing_valid = parse_args(&flags, argv);
         if (is_parsing_valid != 0) {
             return 1;
@@ -17,6 +19,13 @@ int main(int argc, char** argv) {
         if (flags.h) {
             std::cout << "I'm here to help you!\n";
             return 0;
+        }
+        Info counts;
+        if (!flags.file_name.empty()) {
+            if (handle_file_from(&flags, &counts) != 0) {
+                std::cout << "FileNotFound: " << flags.file_name;
+                return -1;
+            }
         }
     }
     return 0;

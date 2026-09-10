@@ -13,10 +13,10 @@
  *   -L
  *
  * @param flags Pointer to the Options structure to update.
- * @param flag Command-line argument to validate.
+ * @param flag Short option to parse.
  *
- * @return 0 if the option is valid.
- * @return -1 if the option is invalid.
+ * @return 0 if the option is recognized.
+ * @return -1 if the option is not supported.
  */
 int check_short_options(Options* flags, const char* flag) {
     if (strcmp(flag, "-l") == 0) {
@@ -45,9 +45,9 @@ int check_short_options(Options* flags, const char* flag) {
  * Options::file_name.
  *
  * @param flags Pointer to the Options structure to update.
- * @param flag Command-line argument to validate.
+ * @param flag Long option to parse.
  *
- * @return 0 if the option is valid.
+ * @return 0 if the option is recognized.
  * @return -1 if the option is invalid or the filename is missing.
  */
 int check_long_options(Options* flags, const char* flag) {
@@ -66,7 +66,6 @@ int check_long_options(Options* flags, const char* flag) {
             std::cout << "Cannot open " << flag << '\n';
             return -1;
         }
-
         flags->file_name = start;
         return 0;
     }
@@ -94,7 +93,7 @@ int check_long_options(Options* flags, const char* flag) {
  * @param argsv Null-terminated array of command-line arguments.
  *
  * @return 0 if all arguments are valid.
- * @return -1 if an invalid argument or option is encountered.
+ * @return -1 if an invalid option or argument is encountered.
  */
 int parse_args(Options* flags, char** argsv) {
     int i = 1;
