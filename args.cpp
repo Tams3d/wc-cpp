@@ -10,7 +10,10 @@
  *   -l
  *   -w
  *   -c
+ *   -m
  *   -L
+ *   -v
+ *   -h
  *
  * @param flags Pointer to the Options structure to update.
  * @param flag Short option to parse.
@@ -25,12 +28,17 @@ int check_short_options(Options* flags, const char* flag) {
         flags->w = true;
     } else if (strcmp(flag, "-c") == 0) {
         flags->c = true;
+    } else if (strcmp(flag, "-m") == 0) {
+        flags->m = true;
     } else if (strcmp(flag, "-L") == 0) {
-        flags->max_line_length = true;
+        flags->L = true;
+    } else if (strcmp(flag, "-v") == 0) {
+        flags->v = true;
+    } else if (strcmp(flag, "-h") == 0) {
+        flags->h = true;
     } else {
         return -1;
     }
-
     return 0;
 }
 
@@ -38,6 +46,12 @@ int check_short_options(Options* flags, const char* flag) {
  * @brief Checks whether an argument is a supported long option.
  *
  * Supported long options:
+ *   --lines
+ *   --words
+ *   --bytes
+ *   --chars
+ *   --max-line-length
+ *   --help
  *   --version
  *   --files0-from=<file>
  *
@@ -51,22 +65,44 @@ int check_short_options(Options* flags, const char* flag) {
  * @return -1 if the option is invalid or the filename is missing.
  */
 int check_long_options(Options* flags, const char* flag) {
-    const char* files0_from_flag = "--files0-from=";
-    const std::size_t PREFIX_LENGTH = strlen(files0_from_flag);
-
+    if (strcmp(flag, "--lines") == 0) {
+        flags->l = true;
+        return 0;
+    }
+    if (strcmp(flag, "--words") == 0) {
+        flags->w = true;
+        return 0;
+    }
+    if (strcmp(flag, "--bytes") == 0) {
+        flags->c = true;
+        return 0;
+    }
+    if (strcmp(flag, "--chars") == 0) {
+        flags->m = true;
+        return 0;
+    }
+    if (strcmp(flag, "--max-line-length") == 0) {
+        flags->L = true;
+        return 0;
+    }
+    if (strcmp(flag, "--help") == 0) {
+        flags->h = true;
+        return 0;
+    }
     if (strcmp(flag, "--version") == 0) {
         flags->v = true;
         return 0;
     }
 
-    if (strncmp(flag, files0_from_flag, PREFIX_LENGTH) == 0) {
-        const char* start = flag + PREFIX_LENGTH;
-
-        if (*start == '\0') {
-            std::cout << "Cannot open " << flag << '\n';
+    const char* prefix = "--files0-from=";
+    if (strncmp(flag, prefix, strlen(prefix)) == 0) {
+        const char* value = flag + strlen(prefix);
+        if (*value == '\0') {
+            std::cerr << "wc: --files0-from needs a value\n";
             return -1;
         }
-        flags->file_name = start;
+        flags->file_name = value;
+        flags->file_from = true;
         return 0;
     }
 
@@ -77,9 +113,15 @@ int check_long_options(Options* flags, const char* flag) {
  * @brief Parses command-line arguments and updates the program options.
  *
  * Long options begin with "--" and short options begin with "-".
- * Non-option arguments are not currently supported.
+ * Non-option arguments are treated as file operands.
  *
  * Supported long options:
+ *   --lines
+ *   --words
+ *   --bytes
+ *   --chars
+ *   --max-line-length
+ *   --help
  *   --version
  *   --files0-from=<file>
  *
@@ -87,37 +129,34 @@ int check_long_options(Options* flags, const char* flag) {
  *   -l
  *   -w
  *   -c
+ *   -m
  *   -L
+ *   -v
+ *   -h
  *
  * @param flags Pointer to the Options structure to update.
- * @param argsv Null-terminated array of command-line arguments.
+ * @param argc Argument count.
+ * @param argsv Argument vector.
  *
  * @return 0 if all arguments are valid.
- * @return -1 if an invalid option or argument is encountered.
+ * @return -1 if an invalid option is encountered.
  */
-int parse_args(Options* flags, char** argsv) {
-    int i = 1;
-
-    while (argsv[i] != nullptr) {
+int parse_args(Options* flags, int argc, char** argsv) {
+    for (int i = 1; i < argc; ++i) {
         const char* arg = argsv[i];
-
         if (arg[0] == '-' && arg[1] == '-') {
             if (check_long_options(flags, arg) != 0) {
-                std::cout << "Invalid option: " << arg << '\n';
+                std::cerr << "wc: invalid option: " << arg << '\n';
                 return -1;
             }
         } else if (arg[0] == '-') {
             if (check_short_options(flags, arg) != 0) {
-                std::cout << "Invalid option: " << arg << '\n';
+                std::cerr << "wc: invalid option: " << arg << '\n';
                 return -1;
             }
         } else {
-            std::cout << "Invalid argument: " << arg << '\n';
-            return -1;
+            flags->files.emplace_back(arg);
         }
-
-        ++i;
     }
-
     return 0;
 }
