@@ -1,3 +1,4 @@
+#include <iomanip>
 #include <iostream>
 
 #include "wc.hpp"
@@ -15,45 +16,53 @@
 void print_data(const Options* flags,
                 const Info* counts,
                 const std::string& label) {
+    const int WIDTH = 8;
     bool none = !flags->l && !flags->w && !flags->c && !flags->m && !flags->L;
 
     if (none) {
-        std::cout << counts->lines << ' ' << counts->words << ' '
-                  << counts->bytes << ' ' << label << '\n';
+        std::cout << std::setw(WIDTH) << counts->lines << std::setw(WIDTH)
+                  << counts->words << std::setw(WIDTH) << counts->bytes;
+        if (!label.empty()) {
+            std::cout << ' ' << label;
+        }
+        std::cout << '\n';
         return;
     }
 
     bool first = true;
     if (flags->l) {
-        std::cout << counts->lines;
+        std::cout << std::setw(WIDTH) << counts->lines;
         first = false;
     }
     if (flags->w) {
         if (!first) {
             std::cout << ' ';
         }
-        std::cout << counts->words;
+        std::cout << std::setw(WIDTH) << counts->words;
         first = false;
     }
     if (flags->m) {
         if (!first) {
             std::cout << ' ';
         }
-        std::cout << counts->chars;
+        std::cout << std::setw(WIDTH) << counts->chars;
         first = false;
     }
     if (flags->c) {
         if (!first) {
             std::cout << ' ';
         }
-        std::cout << counts->bytes;
+        std::cout << std::setw(WIDTH) << counts->bytes;
         first = false;
     }
     if (flags->L) {
         if (!first) {
             std::cout << ' ';
         }
-        std::cout << counts->max_line;
+        std::cout << std::setw(WIDTH) << counts->max_line;
     }
-    std::cout << ' ' << label << '\n';
+    if (!label.empty()) {
+        std::cout << ' ' << label;
+    }
+    std::cout << '\n';
 }
