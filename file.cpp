@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <fstream>
+#include <istream>
 #include <string>
 #include <vector>
 
@@ -20,7 +21,7 @@ std::vector<std::string> read_file_names(const std::string& file_name) {
     std::string cur;
     char ch;
     while (in.get(ch)) {
-        if (ch == '\0') {
+        if (ch == '\0' || ch == '\n') {
             names.push_back(cur);
             cur.clear();
         } else {
@@ -34,17 +35,18 @@ std::vector<std::string> read_file_names(const std::string& file_name) {
 }
 
 /**
- * @brief Count one file.
- * @param file_name File path.
- * @param counts Result.
-   @return 0 on success, 1 on error.
-*/
-int process_file(const std::string& file_name, Info* counts) {
-    std::ifstream in(file_name, std::ios::binary);
-    if (!in.is_open()) {
-        return 1;
-    }
-
+ * @brief Count from an input stream.
+ *
+ * Reads bytes and updates the Info struct
+ * with the line, word, char, byte, and max line counts.
+ *
+ * @param in Input stream to read.
+ * @param counts Pointer to the Info struct to update.
+ *
+ * @return 0 if the stream was processed successfully.
+ * @return 1 on read error.
+ */
+int process_stream(std::istream& in, Info* counts) {
     *counts = Info{};
     bool in_word = false;
     std::size_t len = 0;
@@ -71,5 +73,20 @@ int process_file(const std::string& file_name, Info* counts) {
 
     counts->chars = counts->bytes;
     counts->max_line = std::max(len, counts->max_line);
-    return 0;
+    return in.bad() ? 1 : 0;
+}
+
+/**
+ * @brief Count one file.
+ * @param file_name File path.
+ * @param counts Result.
+   @return 0 on success, 1 on error.
+*/
+int process_file(const std::string& file_name, Info* counts) {
+    std::ifstream in(file_name, std::ios::binary);
+    if (!in.is_open()) {
+        return 1;
+    }
+
+    return process_stream(in, counts);
 }

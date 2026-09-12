@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <iostream>
 
 #include "wc.hpp"
@@ -32,17 +33,45 @@ int main(int argc, char** argv) {
         files = read_file_names(flags.file_name);
     }
     if (files.empty()) {
-        std::cerr << "wc: no files given\n";
-        return 1;
+        Info counts;
+        if (process_stream(std::cin, &counts) != 0) {
+            std::cerr << "wc: stdin read error\n";
+            return 1;
+        }
+        print_data(&flags, &counts, "");
+        return 0;
     }
-
+    int exit_code = 0;
+    Info total;
+    bool stdin_done = false;
     for (const std::string& name : files) {
         Info counts;
-        if (process_file(name, &counts) != 0) {
+        if (name == "-") {
+            if (stdin_done) {
+                counts = Info{};
+            } else if (process_stream(std::cin, &counts) != 0) {
+                std::cerr << "wc: stdin read error\n";
+                exit_code = 1;
+                continue;
+            } else {
+                stdin_done = true;
+            }
+            print_data(&flags, &counts, "-");
+        } else if (process_file(name, &counts) != 0) {
             std::cerr << "wc: " << name << ": no such file\n";
+            exit_code = 1;
             continue;
+        } else {
+            print_data(&flags, &counts, name);
         }
-        print_data(&flags, &counts, name);
+        total.lines += counts.lines;
+        total.words += counts.words;
+        total.chars += counts.chars;
+        total.bytes += counts.bytes;
+        total.max_line = std::max(total.max_line, counts.max_line);
     }
-    return 0;
+    if (files.size() > 1) {
+        print_data(&flags, &total, "total");
+    }
+    return exit_code;
 }

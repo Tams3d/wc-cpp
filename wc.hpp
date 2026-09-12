@@ -36,6 +36,8 @@ int parse_args(Options* flags, int argc, char** argsv);
 void print_data(const Options* flags, const Info* counts,
                 const std::string& label);
 
+int process_stream(std::istream& in, Info* counts);
+
 int process_file(const std::string& file_name, Info* counts);
 
 std::vector<std::string> read_file_names(const std::string& file_name);
